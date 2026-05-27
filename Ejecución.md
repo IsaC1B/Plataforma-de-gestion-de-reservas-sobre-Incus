@@ -33,7 +33,7 @@ ssh -i ./sdkey.pem ubuntu@3.18.239.206
 | `ubuntu` | Usuario del sistema |
 | `3.18.239.206` | IP pública de la instancia AWS |
 
-> Nota: La dirección IP pública puede cambiar dependiendo del reinicio de la instancia EC2 si no se utiliza Elastic IP.
+
 
 ## Servicios Disponibles
 
