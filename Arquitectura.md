@@ -140,10 +140,7 @@ La arquitectura utiliza contenedores Linux distribuidos sobre una red OVN intern
 | Grafana | `3000` | TCP | Dashboards |
 | Prometheus | `9090` | TCP | Métricas |
 | PostgreSQL | `5432` | TCP | Base de datos |
-| HTTP Frontend | `80` | TCP | Frontend web |
-| HTTPS Frontend | `443` | TCP | Frontend seguro |
-| Ceph MON | `6789` | TCP | Monitor Ceph |
-| Ceph Messenger v2 | `3300` | TCP | Comunicación Ceph |
+| WebUI | `8443` | TCP | INterfaz de Usuario |
 | SSH | `22` | TCP | Administración remota |
 
 ---
@@ -234,7 +231,7 @@ Grafana Dashboards
 | Ansible | Operativo |
 | Prometheus | Operativo |
 | Grafana | Operativo |
-| Ceph | En configuración |
+| Ceph | Ver Readme Ceph |
 
 ---
 
