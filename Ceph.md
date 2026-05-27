@@ -158,8 +158,7 @@ Ceph se usa como backend de persistencia para:
 
 Pool utilizado:
 
-- 
-eservas-pool
+- reservas-pool
 
 ## 10. Conclusión
 
