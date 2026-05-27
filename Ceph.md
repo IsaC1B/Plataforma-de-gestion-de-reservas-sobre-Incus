@@ -122,7 +122,7 @@ c -zv 172.31.16.184 6801
 c -zv 172.31.16.184 6802
 - 
 c -zv 172.31.16.184 6803
-
+-
 Puertos OSD accesibles desde el contenedor.
 
 ## 7. Estado final del clúster
@@ -158,7 +158,8 @@ Ceph se usa como backend de persistencia para:
 
 Pool utilizado:
 
-- eservas-pool
+- 
+eservas-pool
 
 ## 10. Conclusión
 
