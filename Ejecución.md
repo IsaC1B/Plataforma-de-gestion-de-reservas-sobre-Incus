@@ -22,7 +22,7 @@ La administración principal de la infraestructura se realiza mediante SSH hacia
 ### Conexión SSH
 
 ```bash
-ssh -i ./sdkey.pem ubuntu@0.0.0.0
+ssh -i ./sdkey.pem ubuntu@3.18.239.206
 ```
 
 ### Parámetros
@@ -31,7 +31,7 @@ ssh -i ./sdkey.pem ubuntu@0.0.0.0
 |---|---|
 | `sdkey.pem` | Llave privada SSH |
 | `ubuntu` | Usuario del sistema |
-| `0.0.0.0` | IP pública de la instancia AWS |
+| `3.18.239.206` | IP pública de la instancia AWS |
 
 > Nota: La dirección IP pública puede cambiar dependiendo del reinicio de la instancia EC2 si no se utiliza Elastic IP.
 
@@ -43,7 +43,7 @@ Grafana permite visualizar métricas y dashboards del sistema distribuido.
 
 #### Acceso
 
-http://0.0.0.0:3000
+http://3.18.239.206:3000
 
 #### Puerto utilizado
 
@@ -62,7 +62,7 @@ Prometheus se encarga de la recolección de métricas del entorno distribuido.
 
 #### Acceso
 
-http://0.0.0.0:9090
+http://3.18.239.206:9090
 
 #### Puerto utilizado
 
