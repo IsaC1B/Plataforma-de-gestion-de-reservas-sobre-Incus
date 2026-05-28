@@ -78,8 +78,16 @@ Acceso:
 
 https://3.18.239.206:8443/ui/project/default/instances
 
+#### Puerto utilizado
+
+| Servicio | Puerto |
+|---|---|
+| Interfaz de instancias | `8443` |
+
 > Nota: Puede ser necesario ejecutar:
 >
 > - `incus config trust add incus-ui`
 > - agregar el token en `trust gtoken`
+>
+> El navegador puede mostrar una advertencia de sitio inseguro; seleccionar **Avanzado** y luego **Continuar a 3.18.239.206 (no seguro)**.
 
