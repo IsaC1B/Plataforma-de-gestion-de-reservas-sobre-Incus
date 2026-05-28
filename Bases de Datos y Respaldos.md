@@ -4,6 +4,19 @@
 
 Este documento describe cómo conectarse, operar y realizar respaldos de la base de datos PostgreSQL del sistema de reservas alojada en el contenedor `db-postgres` de Incus.
 
+### Verificar Estado de Conexión con Ceph
+
+Antes de realizar cualquier operación, verifica que la conexión con Ceph esté activa:
+
+```bash
+sudo /usr/local/bin/ceph-lab-restore.sh && sleep 10 && sudo /usr/local/bin/ceph-check.sh
+```
+
+Este comando:
+1. Ejecuta el script de restauración de laboratorio Ceph
+2. Espera 10 segundos para estabilizar conexiones
+3. Verifica el estado de la conexión con Ceph
+
 ---
 
 ## 1. Conexión a la Base de Datos
@@ -136,7 +149,7 @@ SQL
 ### 6.1 Ver tamaño de la base de datos
 
 ```bash
-incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c 'SELECT pg_size_pretty(pg_database_size(''reservasdb''));'"
+incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c \"SELECT pg_size_pretty(pg_database_size('reservasdb'));\""
 ```
 
 ### 6.2 Verificar conexiones activas
@@ -148,7 +161,7 @@ incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c 'SELECT * FROM
 ### 6.3 Vacío y análisis de la base de datos
 
 ```bash
-incus exec db-postgres -- su - postgres -c "VACUUM ANALYZE;"
+incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c 'VACUUM ANALYZE;'"
 ```
 
 ---
@@ -194,15 +207,19 @@ La base de datos PostgreSQL utiliza **Ceph** para almacenar respaldos de forma d
 - **Host PostgreSQL:** `10.10.0.5`
 - **Base de datos:** `reservasdb`
 
-### 9.2 Crear Respaldo en Ceph
+### 9.2 Listar Backups en Ceph
 
-Ver backups disponibles en Ceph:
+Ver todos los backups disponibles en el pool de Ceph:
 
 ```bash
-rados -p reservas-pool ls | grep backup
+incus exec db-postgres -- rados -p reservas-pool ls | grep backup
 ```
 
-Crear un nuevo respaldo:
+---
+
+### 9.3 Crear Respaldo en Ceph
+
+Crear un nuevo respaldo con timestamp:
 
 ```bash
 incus exec db-postgres -- bash -c "
@@ -215,7 +232,7 @@ rm -f /tmp/reservasdb_\${FECHA}.sql
 "
 ```
 
-### 9.3 Restaurar desde Ceph
+### 9.4 Restaurar desde Ceph
 
 Proceso automatizado para restaurar el backup más reciente desde Ceph:
 
@@ -235,7 +252,7 @@ rm -f /tmp/restore.sql
 "
 ```
 
-### 9.4 Restaurar desde un Backup Específico
+### 9.5 Restaurar desde un Backup Específico
 
 Si necesitas restaurar desde un backup específico :
 
@@ -250,7 +267,7 @@ rm -f /tmp/restore.sql
 "
 ```
 
-### 9.5 Gestión de Espacio en Ceph
+### 9.6 Gestión de Espacio en Ceph
 
 **Ver tamaño de los backups:**
 
@@ -264,7 +281,7 @@ rados -p reservas-pool ls | grep backup | xargs -I {} rados -p reservas-pool sta
 rados -p reservas-pool ls | grep backup | sort | head -n -5 | xargs -I {} rados -p reservas-pool rm {}
 ```
 
-### 9.6 Ventajas de Usar Ceph
+### 9.7 Ventajas de Usar Ceph
 
 -  **Redundancia:** Los datos se replican automáticamente
 -  **Escalabilidad:** Crece conforme aumentan los backups
@@ -272,7 +289,7 @@ rados -p reservas-pool ls | grep backup | sort | head -n -5 | xargs -I {} rados 
 -  **Acceso distribuido:** Backups accesibles desde cualquier nodo
 -  **Compresión:** Ahorro de espacio automático
 
-### 9.7 Monitoreo de Health Ceph
+### 9.8 Monitoreo de Health Ceph
 
 Desde el cluster Ceph, verificar estado:
 
