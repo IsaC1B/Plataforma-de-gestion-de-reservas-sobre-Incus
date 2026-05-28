@@ -1,0 +1,68 @@
+---
+- name: Actualizar cache apt
+  apt:
+    update_cache: yes
+
+- name: Instalar dependencias previas
+  apt:
+    name:
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-psycopg2
+    state: present
+
+- name: Agregar clave GPG PostgreSQL
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Agregar repositorio PostgreSQL 15
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: pgdg
+
+- name: Instalar PostgreSQL 15
+  apt:
+    name:
+      - postgresql-15
+      - postgresql-client-15
+    state: present
+    update_cache: yes
+
+- name: Iniciar PostgreSQL
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Crear usuario reservas
+  become_user: postgres
+  postgresql_user:
+    name: reservas
+    password: reservas123
+    role_attr_flags: CREATEDB
+
+- name: Crear base de datos reservasdb
+  become_user: postgres
+  postgresql_db:
+    name: reservasdb
+    owner: reservas
+    encoding: UTF8
+
+- name: Permitir conexiones desde red OVN
+  lineinfile:
+    path: /etc/postgresql/15/main/pg_hba.conf
+    line: "host    all    all    10.10.0.0/24    md5"
+    state: present
+  notify: Reiniciar PostgreSQL
+
+- name: Escuchar en todas las interfaces
+  lineinfile:
+    path: /etc/postgresql/15/main/postgresql.conf
+    regexp: "^#?listen_addresses"
+    line: "listen_addresses = '*'"
+  notify: Reiniciar PostgreSQL
+
+
