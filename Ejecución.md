@@ -72,6 +72,23 @@ http://3.18.239.206:9090
 |---|---|
 | Prometheus | `9090` |
 
+### App de Reservas
+
+La aplicación de reservas está disponible en:
+
+http://3.18.239.206:5174/
+
+#### Puerto utilizado
+
+| Servicio | Puerto |
+|---|---|
+| App de reservas | `5174` |
+
+#### Credenciales
+
+- Usuario: `admin`
+- Contraseña: `Sisdis2026`
+
 ### Interfaz de Instancias
 
 Acceso:
