@@ -89,67 +89,10 @@ incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c 'SELECT * FROM
 incus exec db-postgres -- su - postgres -c "psql -d reservasdb -c '\d+ users'"
 ```
 
----
 
-## 5. Respaldos de Base de Datos
 
-### 5.1 Crear un respaldo completo
 
-Para crear un respaldo (dump) de toda la base de datos en formato SQL:
-
-```bash
-incus exec db-postgres -- su - postgres -c "pg_dump -d reservasdb > /var/lib/postgresql/respaldo_$(date +%Y%m%d_%H%M%S).sql"
-```
-
-### 5.2 Crear respaldo en formato binario (más eficiente)
-
-```bash
-incus exec db-postgres -- su - postgres -c "pg_dump -Fc -d reservasdb > /var/lib/postgresql/respaldo_$(date +%Y%m%d_%H%M%S).dump"
-```
-
-### 5.3 Listar respaldos existentes
-
-```bash
-incus exec db-postgres -- ls -lh /var/lib/postgresql/respaldo_*
-```
-
-### 5.4 Restaurar desde un respaldo SQL
-
-```bash
-incus exec db-postgres -- su - postgres -c "psql -d reservasdb < /var/lib/postgresql/respaldo_YYYYMMDD_HHMMSS.sql"
-```
-
-### 5.5 Restaurar desde un respaldo binario
-
-```bash
-incus exec db-postgres -- su - postgres -c "pg_restore -d reservasdb /var/lib/postgresql/respaldo_YYYYMMDD_HHMMSS.dump"
-```
-
-### 5.6 Descargar respaldo a máquina local
-
-```bash
-incus file pull db-postgres/var/lib/postgresql/respaldo_YYYYMMDD_HHMMSS.sql ./respaldo_local.sql
-```
-
-### 5.7 Automatizar respaldos diarios (Opción: Crear script)
-
-Crear archivo `/home/user/backup_db.sh`:
-
-```bash
-#!/bin/bash
-BACKUP_DIR="/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-incus exec db-postgres -- su - postgres -c "pg_dump -Fc -d reservasdb > /var/lib/postgresql/respaldo_${TIMESTAMP}.dump"
-echo "Respaldo creado: respaldo_${TIMESTAMP}.dump"
-```
-
-Luego agregar al crontab:
-
-```bash
-0 2 * * * /home/user/backup_db.sh
-```
-
-### 5.8 Respaldo mejorado con Ceph (con timestamp)
+### 5.8 Respaldo mejorado con Ceph
 
 Para crear respaldos automáticos con timestamp y almacenarlos en el pool de Ceph:
 
@@ -172,7 +115,7 @@ rm -f /tmp/reservasdb_\${FECHA}.sql
 
 ### 5.9 Borrar/Limpiar Base de Datos
 
-**⚠️ ADVERTENCIA:** Este comando elimina todas las tablas. Realiza un respaldo primero.
+**ADVERTENCIA:** Este comando elimina todas las tablas. Realiza un respaldo primero.
 
 ```bash
 incus exec db-postgres -- bash -c "
@@ -212,17 +155,17 @@ incus exec db-postgres -- su - postgres -c "VACUUM ANALYZE;"
 
 ## 7. Mejores Prácticas
 
-- ✅ Realizar respaldos regularmente (diariamente recomendado)
-- ✅ Probar restauraciones de respaldos periódicamente
-- ✅ Monitorear el tamaño de la base de datos
-- ✅ Limpiar respaldos antiguos para ahorrar espacio
-- ✅ Mantener logs de eventos para auditoría
-- ❌ No eliminar datos sin antes hacer un respaldo
-- ❌ No cambiar contraseñas sin documentar los cambios
+- Realizar respaldos regularmente
+- Probar restauraciones de respaldos periódicamente
+- Monitorear el tamaño de la base de datos
+- Limpiar respaldos antiguos para ahorrar espacio
+- Mantener logs de eventos para auditoría
+- No eliminar datos sin antes hacer un respaldo
+- No cambiar contraseñas sin documentar los cambios
 
 ---
 
-## 8. Troubleshooting
+## 8. Solución de Problemas
 
 ### Conexión rechazada
 
@@ -236,16 +179,9 @@ incus restart db-postgres
 
 ### Respaldo muy lento
 
-- Considera usar formato binario (`-Fc`) en lugar de SQL
+
 - Verifica el espacio disponible en disco
 
-### No se puede restaurar
-
-- Asegúrate que el archivo existe: `incus exec db-postgres -- ls -la /var/lib/postgresql/`
-- Verifica permisos del usuario postgres
-- Intenta con `--clean` para limpiar datos anteriores
-
----
 
 ## 9. Persistencia con Ceph
 
@@ -301,7 +237,7 @@ rm -f /tmp/restore.sql
 
 ### 9.4 Restaurar desde un Backup Específico
 
-Si necesitas restaurar desde un backup específico (no el más reciente):
+Si necesitas restaurar desde un backup específico :
 
 ```bash
 incus exec db-postgres -- bash -c "
@@ -330,11 +266,11 @@ rados -p reservas-pool ls | grep backup | sort | head -n -5 | xargs -I {} rados 
 
 ### 9.6 Ventajas de Usar Ceph
 
-- ✅ **Redundancia:** Los datos se replican automáticamente
-- ✅ **Escalabilidad:** Crece conforme aumentan los backups
-- ✅ **Confiabilidad:** Recuperación ante fallos de discos
-- ✅ **Acceso distribuido:** Backups accesibles desde cualquier nodo
-- ✅ **Compresión:** Ahorro de espacio automático
+-  **Redundancia:** Los datos se replican automáticamente
+-  **Escalabilidad:** Crece conforme aumentan los backups
+-  **Confiabilidad:** Recuperación ante fallos de discos
+-  **Acceso distribuido:** Backups accesibles desde cualquier nodo
+-  **Compresión:** Ahorro de espacio automático
 
 ### 9.7 Monitoreo de Health Ceph
 
