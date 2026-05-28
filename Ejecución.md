@@ -56,6 +56,8 @@ http://3.18.239.206:3000
 - Usuario: `admin`
 - Contraseña: `Sisdis2026`
 
+Ir a la sección de Dashboards para apreciar las métricas.
+
 ### Prometheus
 
 Prometheus se encarga de la recolección de métricas del entorno distribuido.
@@ -69,3 +71,15 @@ http://3.18.239.206:9090
 | Servicio | Puerto |
 |---|---|
 | Prometheus | `9090` |
+
+### Interfaz de Instancias
+
+Acceso:
+
+https://3.18.239.206:8443/ui/project/default/instances
+
+> Nota: Puede ser necesario ejecutar:
+>
+> - `incus config trust add incus-ui`
+> - agregar el token en `trust gtoken`
+
