@@ -149,6 +149,43 @@ Luego agregar al crontab:
 0 2 * * * /home/user/backup_db.sh
 ```
 
+### 5.8 Respaldo mejorado con Ceph (con timestamp)
+
+Para crear respaldos automáticos con timestamp y almacenarlos en el pool de Ceph:
+
+```bash
+incus exec db-postgres -- bash -c "
+FECHA=\$(date +%Y%m%d_%H%M%S)
+PGPASSWORD=Sisdis2026 pg_dump -U sisdisreservas -h 10.10.0.5 -d reservasdb -f /tmp/reservasdb_\${FECHA}.sql
+rados -p reservas-pool put backup/reservasdb_\${FECHA}.sql /tmp/reservasdb_\${FECHA}.sql
+echo 'Backup guardado:'
+rados -p reservas-pool ls | grep backup
+rm -f /tmp/reservasdb_\${FECHA}.sql
+"
+```
+
+**Nota:** Este comando utiliza:
+- `PGPASSWORD`: Contraseña del usuario sisdisreservas
+- `pg_dump`: Exporta la base de datos
+- `rados`: Envía el respaldo al pool de Ceph `reservas-pool`
+- Limpia archivos temporales después de transferir
+
+### 5.9 Borrar/Limpiar Base de Datos
+
+**⚠️ ADVERTENCIA:** Este comando elimina todas las tablas. Realiza un respaldo primero.
+
+```bash
+incus exec db-postgres -- bash -c "
+PGPASSWORD=Sisdis2026 psql -U sisdisreservas -h 10.10.0.5 -d reservasdb << 'SQL'
+DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS reservations CASCADE;
+DROP TABLE IF EXISTS resources CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+SELECT table_name FROM information_schema.tables WHERE table_schema='public';
+SQL
+"
+```
+
 ---
 
 ## 6. Monitoreo y Mantenimiento
@@ -207,6 +244,107 @@ incus restart db-postgres
 - Asegúrate que el archivo existe: `incus exec db-postgres -- ls -la /var/lib/postgresql/`
 - Verifica permisos del usuario postgres
 - Intenta con `--clean` para limpiar datos anteriores
+
+---
+
+## 9. Persistencia con Ceph
+
+La base de datos PostgreSQL utiliza **Ceph** para almacenar respaldos de forma distribuida y redundante. Esto proporciona persistencia a largo plazo y recuperación ante desastres.
+
+### 9.1 Entendimiento de la Arquitectura
+
+- **Pool de Ceph:** `reservas-pool` - Pool dedicado para respaldos de la base de datos
+- **Usuario PostgreSQL:** `sisdisreservas`
+- **Host PostgreSQL:** `10.10.0.5`
+- **Base de datos:** `reservasdb`
+
+### 9.2 Crear Respaldo en Ceph
+
+Ver backups disponibles en Ceph:
+
+```bash
+rados -p reservas-pool ls | grep backup
+```
+
+Crear un nuevo respaldo:
+
+```bash
+incus exec db-postgres -- bash -c "
+FECHA=\$(date +%Y%m%d_%H%M%S)
+PGPASSWORD=Sisdis2026 pg_dump -U sisdisreservas -h 10.10.0.5 -d reservasdb -f /tmp/reservasdb_\${FECHA}.sql
+rados -p reservas-pool put backup/reservasdb_\${FECHA}.sql /tmp/reservasdb_\${FECHA}.sql
+echo 'Backup guardado:'
+rados -p reservas-pool ls | grep backup
+rm -f /tmp/reservasdb_\${FECHA}.sql
+"
+```
+
+### 9.3 Restaurar desde Ceph
+
+Proceso automatizado para restaurar el backup más reciente desde Ceph:
+
+```bash
+incus exec db-postgres -- bash -c "
+# Ver backups disponibles
+echo 'Backups en Ceph:'
+rados -p reservas-pool ls | grep backup
+echo '---'
+# Tomar el más reciente
+BACKUP=\$(rados -p reservas-pool ls | grep backup | sort | tail -1)
+echo 'Restaurando: '\$BACKUP
+rados -p reservas-pool get \$BACKUP /tmp/restore.sql
+PGPASSWORD=Sisdis2026 psql -U sisdisreservas -h 10.10.0.5 -d reservasdb -f /tmp/restore.sql
+echo 'Restauración completada'
+rm -f /tmp/restore.sql
+"
+```
+
+### 9.4 Restaurar desde un Backup Específico
+
+Si necesitas restaurar desde un backup específico (no el más reciente):
+
+```bash
+incus exec db-postgres -- bash -c "
+# Listar y seleccionar
+rados -p reservas-pool ls | grep backup
+# Reemplazar 'BACKUP_NAME' con el nombre deseado
+rados -p reservas-pool get backup/reservasdb_YYYYMMDD_HHMMSS.sql /tmp/restore.sql
+PGPASSWORD=Sisdis2026 psql -U sisdisreservas -h 10.10.0.5 -d reservasdb -f /tmp/restore.sql
+rm -f /tmp/restore.sql
+"
+```
+
+### 9.5 Gestión de Espacio en Ceph
+
+**Ver tamaño de los backups:**
+
+```bash
+rados -p reservas-pool ls | grep backup | xargs -I {} rados -p reservas-pool stat {}
+```
+
+**Eliminar backups antiguos (ejemplo: mantener últimos 5):**
+
+```bash
+rados -p reservas-pool ls | grep backup | sort | head -n -5 | xargs -I {} rados -p reservas-pool rm {}
+```
+
+### 9.6 Ventajas de Usar Ceph
+
+- ✅ **Redundancia:** Los datos se replican automáticamente
+- ✅ **Escalabilidad:** Crece conforme aumentan los backups
+- ✅ **Confiabilidad:** Recuperación ante fallos de discos
+- ✅ **Acceso distribuido:** Backups accesibles desde cualquier nodo
+- ✅ **Compresión:** Ahorro de espacio automático
+
+### 9.7 Monitoreo de Health Ceph
+
+Desde el cluster Ceph, verificar estado:
+
+```bash
+ceph status
+ceph osd status
+ceph pg stat
+```
 
 ---
 
