@@ -1,0 +1,39 @@
+---
+- name: Actualizar cache apt
+  apt:
+    update_cache: yes
+
+- name: Instalar herramientas de orquestacion
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - git
+      - curl
+      - wget
+      - ansible
+      - unzip
+      - openssh-client
+    state: present
+
+- name: Instalar OpenTofu
+  shell: |
+    curl --proto '=https' --tlsv1.2 -fsSL \
+      https://get.opentofu.org/install-opentofu.sh \
+      | sh -s -- --install-method deb
+  args:
+    creates: /usr/local/bin/tofu
+
+- name: Instalar coleccion Ansible para Incus
+  command: ansible-galaxy collection install community.general
+  become: false
+  ignore_errors: true
+
+- name: Verificar tofu
+  command: tofu version
+  register: tofu_out
+  changed_when: false
+
+- name: Mostrar version tofu
+  debug:
+    msg: "{{ tofu_out.stdout }}"

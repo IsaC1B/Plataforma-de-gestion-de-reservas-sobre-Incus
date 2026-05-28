@@ -1,0 +1,26 @@
+---
+- name: Actualizar cache apt
+  apt:
+    update_cache: yes
+
+- name: Instalar dependencias Ceph
+  apt:
+    name:
+      - ceph-common
+      - ceph-mon
+      - ceph-osd
+      - ceph-mgr
+      - python3
+      - python3-jinja2
+      - curl
+    state: present
+
+- name: Crear directorio configuracion Ceph
+  file:
+    path: /etc/ceph
+    state: directory
+    mode: '0755'
+
+- name: Mostrar informacion Ceph
+  debug:
+    msg: "Ceph instalado correctamente en ceph-node"

@@ -1,0 +1,36 @@
+---
+- name: node-control - herramientas de orquestacion
+  hosts: node_control
+  become: true
+  roles:
+    - node-control
+
+- name: app-api - gateway REST
+  hosts: app_api
+  become: true
+  roles:
+    - app-api
+
+- name: app-core - logica de negocio
+  hosts: app_core
+  become: true
+  roles:
+    - app-core
+
+- name: db-postgres - persistencia
+  hosts: db_postgres
+  become: true
+  roles:
+    - db-postgres
+
+- name: monitoring - Prometheus y Grafana
+  hosts: monitoring
+  become: true
+  roles:
+    - monitoring
+
+- name: ceph-node - almacenamiento
+  hosts: ceph_node
+  become: true
+  roles:
+    - ceph-node
